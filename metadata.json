@@ -1,0 +1,8 @@
+{
+  "name": "Plants Doctor",
+  "description": "An advanced AI assistant for farmers. Features include camera-based disease detection with translation, voice-powered community support, location-aware weather forecasts for agriculture, a personal farming scheduler, and a learning hub with the latest farming techniques.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
