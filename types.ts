@@ -1,3 +1,8 @@
+// FIX: Added a triple-slash directive to include Vite's client types.
+// This resolves the TypeScript error 'Property 'env' does not exist on type 'ImportMeta''
+// in components/Login.tsx by providing the correct type definitions for `import.meta.env`.
+/// <reference types="vite/client" />
+
 export interface User {
   name: string;
   email: string;

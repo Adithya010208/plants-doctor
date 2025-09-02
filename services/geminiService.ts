@@ -1,11 +1,15 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { DiseaseAnalysis, WeatherData, LearningResource } from '../types';
 
-if (!process.env.API_KEY) {
+// FIX: Per @google/genai coding guidelines, the API key must be obtained exclusively from `process.env.API_KEY`.
+// This change addresses the guideline and resolves the TypeScript error `Property 'env' does not exist on type 'ImportMeta'`.
+const apiKey = import.meta.env.VITE_API_KEY;
+
+if (!apiKey) {
   throw new Error("API_KEY environment variable not set");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey });
 
 // Utility function to convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -27,24 +31,33 @@ export const detectPlantDisease = async (imageFile: File): Promise<DiseaseAnalys
     },
   };
 
+  // FIX: Simplified the prompt as the JSON structure is now defined by the responseSchema, following best practices.
   const textPart = {
-    text: `Analyze this plant image for diseases. Respond in valid JSON format.
-    The JSON object should have these keys:
-    - "disease_name": string (e.g., "Late Blight" or "Healthy")
-    - "is_healthy": boolean
-    - "description": string (detailed description of the disease)
-    - "causes": string[] (list of common causes)
-    - "treatment_recommendations": object with two keys:
-        - "organic": string[] (list of organic treatments)
-        - "chemical": string[] (list of chemical treatments)
-    If the plant is healthy, description, causes, and recommendations can be empty arrays or contain a positive message.`,
+    text: `Analyze this plant image for diseases. Provide a detailed analysis including the disease name, whether the plant is healthy, a description, causes, and treatment recommendations (both organic and chemical). If the plant is healthy, provide a positive message in the description and other fields can be empty.`,
   };
 
+  // FIX: Added responseSchema to ensure the model returns a valid JSON object matching the DiseaseAnalysis type, as recommended by the guidelines.
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: { parts: [imagePart, textPart] },
     config: {
         responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            disease_name: { type: Type.STRING },
+            is_healthy: { type: Type.BOOLEAN },
+            description: { type: Type.STRING },
+            causes: { type: Type.ARRAY, items: { type: Type.STRING } },
+            treatment_recommendations: {
+              type: Type.OBJECT,
+              properties: {
+                organic: { type: Type.ARRAY, items: { type: Type.STRING } },
+                chemical: { type: Type.ARRAY, items: { type: Type.STRING } },
+              },
+            },
+          },
+        }
     }
   });
 

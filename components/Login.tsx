@@ -31,14 +31,20 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // The conditional check for process.env.GOOGLE_CLIENT_ID has been removed.
-    // The app now assumes this environment variable is always available.
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    
+    if (!googleClientId) {
+      console.error("VITE_GOOGLE_CLIENT_ID is not set. Google Sign-In will not work.");
+      setError("Google Sign-In is not configured for this site.");
+      return;
+    }
+
     if (typeof window.google === 'undefined' || !googleButtonRef.current) {
         return;
     }
     
     window.google.accounts.id.initialize({
-      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_id: googleClientId,
       callback: (response: any) => {
         const userData = decodeJwt(response.credential);
         if (userData) {
@@ -99,7 +105,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <p className="text-gray-600 dark:text-gray-300 mt-2">Your AI-powered farming companion.</p>
         
         <div className="mt-8 flex justify-center">
-            {/* The Google Sign-In button is now rendered directly, assuming the client ID is configured. */}
+            {/* The Google Sign-In button is rendered here. It may show an error if the client ID is missing. */}
             <div ref={googleButtonRef}></div>
         </div>
         
